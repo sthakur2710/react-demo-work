@@ -11,12 +11,6 @@ var opts = {}
 opts.jwtFromRequest = ExtractJWT.fromAuthHeaderWithScheme('JWT'),
 opts.secretOrKey = 'hiibro';
 
-console.log('opt data',opts)
-
-// var jwtOptions = {}
-// jwtOptions.jwtFromRequest = ExtractJWT.fromAuthHeaderAsBearerToken();
-// jwtOptions.secretOrKey = 'hiibro';
-
 passport.serializeUser(function(user, done) {
   done(null, user.id);
 });
@@ -53,13 +47,6 @@ passport.use(
                 message: "User not found"
               });
             }
-            //   if (!user.validPassword(user.password)) {
-            //     console.log('come now')
-            //     return done(null, false, {
-            //         message: 'Password is wrong'
-            //     })
-            // }
-            // If credentials are correct, return the user object
             return done(null, user);
           }
         );

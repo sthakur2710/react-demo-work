@@ -9,6 +9,16 @@ const UserSchema = mongoose.Schema({
     timestamps: true
 })
 
+
+const HostelSchema = mongoose.Schema({
+    name:String,
+    location:String,
+    phone:String,
+    file:String
+}, {
+    timestamps: true
+})
+
 UserSchema.methods.validPassword = function( pwd ) {
     console.log('ye he yaha par', pwd)
     console.log('this pwd', this.password)
@@ -17,10 +27,13 @@ UserSchema.methods.validPassword = function( pwd ) {
 };
 
 var user_define_module=mongoose.model('Register_master', UserSchema);
+var Hostel_details_module=mongoose.model('Hostel_details', HostelSchema);
+
 
 module.exports = {
     'Register_master': user_define_module,
-}
+    'Hostel_master':Hostel_details_module
+} 
 // module.exports = mongoose.model('User_master', UserSchema)
 // module.exports = mongoose.model('User_rating', UserRating)
       

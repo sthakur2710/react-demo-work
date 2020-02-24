@@ -9,7 +9,7 @@ import "./container/Login.css";
 class Signup extends Component {
   constructor(props) {
     super(props);
-    
+
     this.state = {
       name: "",
       email: "",
@@ -30,14 +30,13 @@ class Signup extends Component {
       let userData = this.state;
 
       axios.post(`/create`, userData).then(res => {
-        console.log("submit done", res);
         this.setState({
           name: "",
           email: "",
           password: "",
           phone: ""
         });
-        if (res.data.status == "already") {
+        if (res.data.status === "already") {
           toast.warning(res.data.msg);
         } else {
           toast.success(res.data.msg);
@@ -120,7 +119,8 @@ class Signup extends Component {
             />
             <span style={{ color: "red" }}>{this.state.errors["phone"]}</span>
           </FormGroup>
-          <Button type="submit" block bsSize="large" type="submit">
+
+          <Button type="submit" block bsSize="large">
             Registraion
           </Button>
         </form>

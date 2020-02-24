@@ -4,7 +4,7 @@ import axios from "axios";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { Link, withRouter } from "react-router-dom";
-
+import GoogleLogin from 'react-google-login';
 import "./container/Login.css";
 class UserRegistrationLogin extends Component {
   constructor(props) {
@@ -20,12 +20,15 @@ class UserRegistrationLogin extends Component {
     };
   }
 
+  responseGoogle = (response) => {
+    console.log('google ka mila he data', response);
+  }
+
   handleSubmit = e => {
     e.preventDefault();
     let userLoginData = this.state;
     if (this.handleValidation()) {
       axios.post(`/login`, userLoginData).then(res => {
-        console.log("res data", res);
         localStorage.setItem("token", res.data.token);
         toast.success(res.data.msg);
         this.setState({
@@ -83,13 +86,20 @@ class UserRegistrationLogin extends Component {
               {this.state.errors["password"]}
             </span>
           </FormGroup>
-          <Button type="submit" block bsSize="large" type="submit">
+          <Button type="submit" block bsSize="large">
             Login
           </Button>
         </form>
-        <Link block bsSize="large" style={{ marginLeft: "560px" }} to="/signup">
+        <br></br>
+        <Link block bsSize="large" style={{ marginLeft: "480px" }} to="/signup">
           Go to Registration page
-        </Link>
+        </Link>&nbsp;&nbsp;
+        <GoogleLogin
+        clientId="481371617706-sno5u5se3pi4rug0o9lt6400qbbnuj79.apps.googleusercontent.com" //CLIENTID NOT CREATED YET
+        buttonText="LOGIN WITH GOOGLE"
+        onSuccess={this.responseGoogle}
+        onFailure={this.responseGoogle}
+      />
         <ToastContainer />
       </div>
     );
