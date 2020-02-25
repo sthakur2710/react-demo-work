@@ -4,7 +4,7 @@ import axios from "axios";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { Link, withRouter } from "react-router-dom";
-import GoogleLogin from 'react-google-login';
+import GoogleLogin from "react-google-login";
 import "./container/Login.css";
 class UserRegistrationLogin extends Component {
   constructor(props) {
@@ -20,25 +20,47 @@ class UserRegistrationLogin extends Component {
     };
   }
 
-  responseGoogle = (response) => {
-    console.log('google ka mila he data', response);
-  }
+  responseGoogle = response => {
+    let get_token = response.tokenObj.id_token;
+    axios.put(`/verify_token/` + get_token).then(res => {
+      console.log("data get", res);
+
+      localStorage.setItem("token", get_token);
+      toast.success(res.data.msg);
+      setTimeout(() => {
+        this.props.history.push("/dashboard");
+      }, 2000);
+    });
+  };
 
   handleSubmit = e => {
     e.preventDefault();
     let userLoginData = this.state;
     if (this.handleValidation()) {
-      axios.post(`/login`, userLoginData).then(res => {
-        localStorage.setItem("token", res.data.token);
-        toast.success(res.data.msg);
-        this.setState({
-          email: "",
-          password: ""
-        });
-        setTimeout(() => {
-          this.props.history.push("/dashboard");
-        }, 2000);
-      });
+      try {
+        axios
+          .post(`/login`, userLoginData)
+          .then(res => {
+            if (res.status === 200) {
+              localStorage.setItem("token", res.data.token);
+              toast.success(res.data.msg);
+              this.setState({
+                email: "",
+                password: ""
+              });
+              setTimeout(() => {
+                this.props.history.push("/dashboard");
+              }, 2000);
+            }
+          })
+          .catch(error => {
+            if (error.response.status === 400) {
+              toast.error(error.response.data.msg);
+            }
+          });
+      } catch (e) {
+        console.log(`😱 Axios request failed: ${e}`);
+      }
     }
   };
 
@@ -93,13 +115,14 @@ class UserRegistrationLogin extends Component {
         <br></br>
         <Link block bsSize="large" style={{ marginLeft: "480px" }} to="/signup">
           Go to Registration page
-        </Link>&nbsp;&nbsp;
+        </Link>
+        &nbsp;&nbsp;
         <GoogleLogin
-        clientId="481371617706-sno5u5se3pi4rug0o9lt6400qbbnuj79.apps.googleusercontent.com" //CLIENTID NOT CREATED YET
-        buttonText="LOGIN WITH GOOGLE"
-        onSuccess={this.responseGoogle}
-        onFailure={this.responseGoogle}
-      />
+          clientId="481371617706-sno5u5se3pi4rug0o9lt6400qbbnuj79.apps.googleusercontent.com" //CLIENTID NOT CREATED YET
+          buttonText="LOGIN WITH GOOGLE"
+          onSuccess={this.responseGoogle}
+          onFailure={this.responseGoogle}
+        />
         <ToastContainer />
       </div>
     );

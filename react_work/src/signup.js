@@ -28,20 +28,23 @@ class Signup extends Component {
     e.preventDefault();
     if (this.handleValidation()) {
       let userData = this.state;
-
-      axios.post(`/create`, userData).then(res => {
-        this.setState({
-          name: "",
-          email: "",
-          password: "",
-          phone: ""
+      axios.post(`/create`, userData)
+        .then(res => {
+          if (res.status === 200) {
+            this.setState({
+              name: "",
+              email: "",
+              password: "",
+              phone: ""
+            });
+            toast.success(res.data.msg);
+          }
+        })
+        .catch(error => {
+          if (error.response.status === 400) {
+            toast.error(error.response.data.msg);
+          }
         });
-        if (res.data.status === "already") {
-          toast.warning(res.data.msg);
-        } else {
-          toast.success(res.data.msg);
-        }
-      });
     }
   };
 
@@ -52,14 +55,10 @@ class Signup extends Component {
     if (!this.state.name) {
       formIsValid = false;
       errors["name"] = "Name can not be empty";
-    } else {
-      errors["name"] = "";
     }
     if (!this.state.email) {
       formIsValid = false;
       errors["email"] = "Email can not be empty";
-    } else {
-      errors["email"] = "";
     }
     if (!this.state.password) {
       formIsValid = false;
@@ -68,8 +67,6 @@ class Signup extends Component {
     if (!this.state.phone) {
       formIsValid = false;
       errors["phone"] = "Phone number can not be empty";
-    } else {
-      errors["phone"] = "";
     }
     this.setState({ errors: errors });
     return formIsValid;

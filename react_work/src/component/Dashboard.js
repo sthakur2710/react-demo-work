@@ -22,13 +22,13 @@ class Dashboard extends Component {
 
     this.state = {
       show: false,
-      editshow:false,
+      editshow: false,
       selected: "",
       name: "",
       phone: "",
       file: [],
       hotel_details: [],
-      current_hotel_details:[],
+      current_hotel_details: [],
       errors: {
         name: "",
         selected: "",
@@ -44,11 +44,35 @@ class Dashboard extends Component {
 
   getHotelDetails = () => {
     axios.get(`/get_hostel_details`).then(res => {
-      this.setState({
-        hotel_details: res.data
-      });
+      if (res.status === 200) {
+        this.setState({
+          hotel_details: res.data.hotel_details
+        });
+      }
     });
   };
+
+  EditHandleValidation()
+  {
+    let errors = {};
+    let formIsValid = true;
+
+    if (!this.state.name) {
+      formIsValid = false;
+      errors["name"] = "Name can not be empty";
+    } else {
+      errors["name"] = "";
+    }
+    if (!this.state.phone) {
+      formIsValid = false;
+      errors["phone"] = "Mobile No. can not be empty";
+    } else {
+      errors["phone"] = "";
+    }
+
+    this.setState({ errors: errors });
+    return formIsValid;
+  }
 
   handleValidation() {
     let errors = {};
@@ -87,7 +111,7 @@ class Dashboard extends Component {
   handleClose = () => {
     this.setState({
       show: false,
-      editshow:false,
+      editshow: false
     });
   };
 
@@ -100,47 +124,65 @@ class Dashboard extends Component {
       formData.append("location", this.state.selected[0].label); //append the values with key, value pair
       formData.append("file", this.state.file); //append the values with key, value pair
 
-      axios.post(`/create_hotel_details`, formData).then(res => {
-        this.setState({
-          selected: [],
-          name: "",
-          phone: "",
-          file: [],
-          errors: {
-            name: "",
-            selected: "",
-            phone: "",
-            file: ""
+      axios
+        .post(`/create_hotel_details`, formData)
+        .then(res => {
+          if (res.status === 200) {
+            this.setState({
+              selected: [],
+              name: "",
+              phone: "",
+              show: false,
+              file: [],
+              errors: {
+                name: "",
+                selected: "",
+                phone: "",
+                file: ""
+              }
+            });
+            toast.success(res.data.msg);
+            this.getHotelDetails();
+            this.handleClose();
+          }
+        })
+        .catch(error => {
+          if (error.response.status === 400) {
+            toast.error(error.response.data.msg);
           }
         });
-        toast.success("Hotel details added successfully");
-      });
     }
   };
 
-  UpdateHotelDetails = (e)=> {
+  UpdateHotelDetails = e => {
     e.preventDefault();
-    var current_user_id=this.state.current_hotel_details._id;
-    var curent_user_data=this.state.current_hotel_details;
-    curent_user_data.name=this.state.name;
-    curent_user_data.phone=this.state.phone;
-
-    axios.put(`/update_hotel_details/` + current_user_id, curent_user_data).then(res => {
-      this.setState({
-        name: res.data.name,
-        phone: res.data.phone,
-        errors: {
-          name: "",
-          selected: "",
-          phone: "",
-          file: ""
-        }
-      });
-      toast.success(res.data.msg);
-      this.getHotelDetails();
-      this.handleClose()
-    });
-  }
+    if(this.EditHandleValidation())
+    {
+      var current_user_id = this.state.current_hotel_details._id;
+      var curent_user_data = this.state.current_hotel_details;
+      curent_user_data.name = this.state.name;
+      curent_user_data.phone = this.state.phone;
+  
+      axios
+        .put(`/update_hotel_details/` + current_user_id, curent_user_data)
+        .then(res => {
+          this.setState({
+            name: res.data.name,
+            phone: res.data.phone,
+            errors: {
+              name: "",
+              selected: "",
+              phone: "",
+              file: ""
+            }
+          });
+          toast.success(res.data.msg);
+          this.getHotelDetails();
+          this.handleClose();
+        });
+    }
+   
+  };
 
   handleShow = () => {
     this.setState({
@@ -149,7 +191,7 @@ class Dashboard extends Component {
       name: "",
       phone: "",
       file: [],
-      current_hotel_details:[],
+      current_hotel_details: [],
       errors: {
         name: "",
         selected: "",
@@ -163,25 +205,25 @@ class Dashboard extends Component {
     axios.get(`/get_hotel_details_record/` + id).then(res => {
       this.setState({
         current_hotel_details: res.data.data,
-        name:res.data.data['name'],
-        phone:res.data.data['phone']
+        name: res.data.data["name"],
+        phone: res.data.data["phone"]
       });
     });
     this.setState({
-      editshow:true,
-    })
-  }
+      editshow: true
+    });
+  };
   removeHotelDetails = id => {
     axios.get(`/delete_hotel_details/` + id).then(res => {
-      console.log("res get", res);
-      this.getHotelDetails();
-      toast.success(res.data.msg);
+      if (res.status === 200) {
+        this.getHotelDetails();
+        toast.success(res.data.msg);
+      }
     });
   };
   render() {
     return (
       <>
-      {/* {JSON.stringify(this.state)} */}
         <Navbar bg="dark" variant="dark">
           <Navbar.Brand href="#home">Demo Project</Navbar.Brand>
           <Nav className="mr-auto">
@@ -194,60 +236,57 @@ class Dashboard extends Component {
           <Button onClick={this.logout}>Logout</Button>
         </Navbar>
 
-        {this.state.hotel_details.length > 0
-          ? this.state.hotel_details.map((item, i) => (
-              <Card style={{ width: "40rem" }} key={i}>
-                <Container>
-                  <Row>
-                    <Col md="6">
-                      <Card.Img
-                        variant="top"
-                        src={require(`../${item.file}`)}
-                      />
-                    </Col>
-                    <Col md="6">
-                      <Card.Body>
-                        <table>
-                          <tr>
-                            <th>Name:</th>
-                            <td>{item.name}</td>
-                          </tr>
-                          <tr>
-                            <th>Phone:</th>
-                            <td>{item.phone}</td>
-                          </tr>
-                          <tr>
-                            <th>Location:</th>
-                            <td>{item.location}</td>
-                          </tr>
-                          <tr>
-                            <th>
-                            <button
-                                onClick={()=>this.EditHotelDetails(item._id)}
-                              >
-                              <i class="fa fa-edit"></i>
-                              </button>
-                            </th>
-                            <th>
-                              <button
-                                onClick={() => {
-                                  if (window.confirm("Delete the item?")) {
-                                    this.removeHotelDetails(item._id);
-                                  }
-                                }}
-                              >
-                                <i class="fa fa-trash"></i>
-                              </button>
-                            </th>
-                          </tr>
-                        </table>
-                      </Card.Body>
-                    </Col>
-                  </Row>
-                </Container>
-              </Card>
-            ))
-          : "NO data found"}
+        {this.state.hotel_details.length > 0 ? (
+          this.state.hotel_details.map((item, i) => (
+            <Card style={{ width: "40rem" }} key={i}>
+              <Container>
+                <Row>
+                  <Col md="6">
+                    <Card.Img variant="top" src={require(`../${item.file}`)} />
+                  </Col>
+                  <Col md="6">
+                    <table>
+                      <tr>
+                        <th>Name:</th>
+                        <td>{item.name}</td>
+                      </tr>
+                      <tr>
+                        <th>Phone:</th>
+                        <td>{item.phone}</td>
+                      </tr>
+                      <tr>
+                        <th>Location:</th>
+                        <td>{item.location}</td>
+                      </tr>
+                      <tr>
+                        <th>
+                          <button
+                            onClick={() => this.EditHotelDetails(item._id)}
+                          >
+                            <i class="fa fa-edit"></i>
+                          </button>
+                        </th>
+                        <th>
+                          <button
+                            onClick={() => {
+                              if (window.confirm("Delete the item?")) {
+                                this.removeHotelDetails(item._id);
+                              }
+                            }}
+                          >
+                            <i class="fa fa-trash"></i>
+                          </button>
+                        </th>
+                      </tr>
+                    </table>
+                  </Col>
+                </Row>
+              </Container>
+            </Card>
+          ))
+        ) : (
+          <h1 style={{ textAlign: "center" }}>No data found of hotel </h1>
+        )}
 
         <Footer />
         <Modal show={this.state.show} onHide={() => this.handleClose()}>
