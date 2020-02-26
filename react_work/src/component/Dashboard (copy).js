@@ -49,23 +49,83 @@ class Dashboard extends Component {
 
   componentDidMount() {
     this.getHotelDetails();
+    // this.get_lat_long('indore')
+  }
+
+  //--------------get lat long function---------------
+  // get_lat_long= async (user_location)=>
+  //  {
+  //   let details_data = {};
+  //   let loc_data = await Geocode.fromAddress(user_location);
+  //   console.log('loc data now',loc_data.results[0].geometry.location.lat)
+  //   details_data['lat']=loc_data.results[0].geometry.location.lat
+  //   details_data['lng']=loc_data.results[0].geometry.location.lng
+  //   return details_data
+  // }
+
+  get_lat_long(user_location) {
+    Geocode.fromAddress(user_location)
+      .then(response => {
+        const { lat, lng } = response.results[0].geometry.location;
+        console.log("location call hui", lat, lng);
+        return { lat, lng };
+      })
+      .catch(error => {
+        console.log("error", error);
+      });
   }
 
   getHotelDetails = async () => {
-    let arr = [];
+    const promise_arr = [];
     const res = await axios.get(`/get_hostel_details`);
     if (res.status === 200) {
       this.setState({ hotel_details: res.data.hotel_details });
-
-      res.data.hotel_details.map(data => {
-        Geocode.fromAddress(data.location).then(response => {
-          const { lat, lng } = response.results[0].geometry.location;
-          arr.push({ lat, lng });
-          this.setState({
-            location_obj: [...this.state.location_obj, { lat, lng }]
+      if (res.data.hotel_details.length > 0) {
+        let promise = new Promise(function(resolve, reject) {
+          let arr = [];
+          res.data.hotel_details.map(data => {
+            Geocode.fromAddress(data.location)
+              .then(response => {
+                const { lat, lng } = response.results[0].geometry.location;
+                arr.push({ lat, lng });
+              })
+              .catch(error => {
+                console.log("error", error);
+              });
           });
+
+          resolve(arr);
         });
-      });
+
+        promise_arr.push(promise);
+
+        // promise.then(
+        //   data => {
+        //     console.log(
+        //       "Got data! Promise fulfilled.",
+        //       data,
+        //       typeof data,
+        //       Object.keys(data).length
+        //     );
+        //   },
+        //   error => {
+        //     console.log("Promise rejected.");
+        //     console.log(error.message);
+        //   }
+        // );
+      }
+
+      Promise.all(promise_arr)
+        .then(data => {
+          console.log("First handler", data[0]);
+          data[0].map((item)=>{
+            console.log('each val', item)
+          })
+
+        })
+        .then(data => {
+          console.log("Second handler", data);
+        });
     }
   };
 
@@ -249,6 +309,7 @@ class Dashboard extends Component {
     }
     return (
       <>
+        {JSON.stringify(this.state)}
         <Navbar bg="dark" variant="dark">
           <Navbar.Brand href="#home">Demo Project</Navbar.Brand>
           <Nav className="mr-auto">
@@ -268,13 +329,37 @@ class Dashboard extends Component {
             lng: 75.8577
           }}
         >
-          {this.state.location_obj.map((item, i) => (
+          {/* {
+            this.state.hotel_details.length > 0
+            ?
+             this.state.hotel_details.map((res, i) => (
+                <Marker
+                  title={"The marker`s title will appear as a tooltip."}
+                  name={"SOMA"}
+                  position={this.get_lat_long(res.location)}
+                />
+              ))
+            : "no calling"
+            } */}
+
+          {/* {this.state.hotel_details.forEach((res, i) => (
             <Marker
               title={"The marker`s title will appear as a tooltip."}
               name={"SOMA"}
-              position={{ lat: item.lat, lng: item.lng }}
+              position={this.get_lat_long(res.location)}
             />
-          ))}
+          ))} */}
+
+          <Marker
+            title={"lets work appear as a tooltip."}
+            name={"Your position"}
+            position={{ lat: 23.2599, lng: 77.4126 }}
+          />
+          <Marker
+            title={"lets work appear as a tooltip."}
+            name={"Your position"}
+            position={{ lat: 23.5236, lng: 77.814 }}
+          />
         </Map>
         {this.state.hotel_details.length > 0 ? (
           this.state.hotel_details.map((item, i) => (
@@ -442,3 +527,5 @@ class Dashboard extends Component {
 export default GoogleApiWrapper({
   apiKey: "AIzaSyBPAu5c1AoGURvC4gY6QTzHx_iV9tIqXRg"
 })(withRouter(Dashboard));
+
+// export default withRouter(Dashboard);
